@@ -3,7 +3,7 @@
 # However, we will use a more powerful and simpler library called requests.
 # This is external library that you may need to install first.
 import requests
-
+import json
 
 def get_data():
     # With requests, we can ask the web service for the data.
@@ -21,37 +21,35 @@ def get_data():
             "orderby": "time-asc"}
     )
 
-    # The response we get back is an object with several fields.
-    # The actual contents we care about are in its text field:
-    text = response.text
-    # To understand the structure of this text, you may want to save it
-    # to a file and open it in VS Code or a browser.
-    # See the README file for more information.
-    ...
+    return json.loads(response.text)
 
-    # We need to interpret the text to get values that we can work with.
-    # What format is the text in? How can we load the values?
-    return ...
 
 def count_earthquakes(data):
     """Get the total number of earthquakes in the response."""
-    return ...
+    return data['metadata']['count']
 
 
 def get_magnitude(earthquake):
     """Retrive the magnitude of an earthquake item."""
-    return ...
+    return earthquake['properties']['mag']
 
 
 def get_location(earthquake):
     """Retrieve the latitude and longitude of an earthquake item."""
     # There are three coordinates, but we don't care about the third (altitude)
-    return ...
+    return earthquake['geometry']['coordinates']
 
 
 def get_maximum(data):
     """Get the magnitude and location of the strongest earthquake in the data."""
-    ...
+    earthquake_with_highest_magnitude = max(
+        data['features'],
+        key=lambda f: f['properties']['mag']
+    )
+
+    magnitude = earthquake_with_highest_magnitude['properties']['mag']
+    coordinates = get_location(earthquake_with_highest_magnitude)
+    return (magnitude, f'longitude={coordinates[0]}, latitude={coordinates[1]}')
 
 
 # With all the above functions defined, we can now call them and get the result
@@ -59,3 +57,7 @@ data = get_data()
 print(f"Loaded {count_earthquakes(data)}")
 max_magnitude, max_location = get_maximum(data)
 print(f"The strongest earthquake was at {max_location} with magnitude {max_magnitude}")
+
+# Output
+# Loaded 120
+# The strongest earthquake was at longitude=-2.15, latitude=52.52 with magnitude 4.8
